@@ -1,0 +1,17 @@
+# Môi trường ảo Python
+.venv/
+venv/
+ENV/
+
+# Cache Python
+__pycache__/
+*.py[cod]
+
+# File CSDL cục bộ
+*.db
+Database/*.db
+
+# File hệ thống và IDE
+.vscode/
+.idea/
+.DS_Store
