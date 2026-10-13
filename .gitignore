@@ -7,9 +7,6 @@ ENV/
 __pycache__/
 *.py[cod]
 
-# File CSDL cục bộ
-*.db
-Database/*.db
 
 # File hệ thống và IDE
 .vscode/

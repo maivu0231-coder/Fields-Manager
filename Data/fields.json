@@ -1,0 +1,38 @@
+[
+  {
+    "created_at": "2026-09-08 08:00:00",
+    "updated_at": "2026-09-08 08:00:00",
+    "field_id": "S01",
+    "name": "Sân 5A",
+    "field_type": "Sân 5",
+    "price_per_hour": 200000.0,
+    "status": "Trống"
+  },
+  {
+    "created_at": "2026-09-08 08:00:00",
+    "updated_at": "2026-09-08 08:00:00",
+    "field_id": "S02",
+    "name": "Sân 5B",
+    "field_type": "Sân 5",
+    "price_per_hour": 200000.0,
+    "status": "Đang có khách"
+  },
+  {
+    "created_at": "2026-09-08 08:00:00",
+    "updated_at": "2026-09-08 08:00:00",
+    "field_id": "S03",
+    "name": "Sân 7A",
+    "field_type": "Sân 7",
+    "price_per_hour": 350000.0,
+    "status": "Trống"
+  },
+  {
+    "created_at": "2026-09-08 08:00:00",
+    "updated_at": "2026-09-08 08:00:00",
+    "field_id": "S04",
+    "name": "Sân 7B",
+    "field_type": "Sân 7",
+    "price_per_hour": 350000.0,
+    "status": "Bảo trì"
+  }
+]
