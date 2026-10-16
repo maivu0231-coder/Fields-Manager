@@ -1,11 +1,11 @@
 import os
-from typing import List, Optional
+from typing import Any, List, Optional
 from datetime import datetime
-from Models import Field, Booking, Payment
-from .json_handler import JSONHandler
+from src.Models import Field, Booking, Payment
+from src.Storage.json_handler import JSONHandler
 #default data directory relative to the project root
 DEFAULT_DATA_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "data")
+    os.path.join(os.path.dirname(__file__), "..", "..", "Data")
 )
 
 
@@ -17,11 +17,11 @@ class BaseRepository:
         self.id_field_name = id_field_name
         self.model_cls = model_cls
 
-    def get_all(self) -> List[any]:
+    def get_all(self) -> List[Any]:
         raw_items = self.handler.read_all()
         return [self.model_cls.from_dict(item) for item in raw_items]
 
-    def get_by_id(self, item_id: str) -> Optional[any]:
+    def get_by_id(self, item_id: str) -> Optional[Any]:
         raw_items = self.handler.read_all()
         for item in raw_items:
             if str(item.get(self.id_field_name)) == str(item_id):
