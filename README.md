@@ -4,7 +4,7 @@ Dự án **Quản Lý Sân Bóng Đá** được xây dựng theo phong cách l�
 
 ---
 
-## 🏗️ CẤU TRÚC THƯ MỤC CHUẨN MAIVU0231
+## CẤU TRÚC THƯ MỤC
 
 ```text
 QuanLySanBong/
@@ -24,7 +24,7 @@ QuanLySanBong/
 
 ---
 
-## 🎨 ĐẶC ĐIỂM THIẾT KẾ & VIBE LẬP TRÌNH
+## ĐẶC ĐIỂM THIẾT KẾ & VIBE LẬP TRÌNH
 
 1. **Pathlib An Toàn**: Sử dụng `Path(__file__).resolve()` định vị file tuyệt đối, tránh lỗi `FileNotFoundError`.
 2. **Lưu File Bền Vững (JSON Persistence)**: Mọi thao tác *Thêm, Sửa, Xóa* tự động đọc/ghi ngay lập tức vào file `Data/fields_data.json` chuẩn UTF-8.
@@ -37,7 +37,7 @@ QuanLySanBong/
 
 ---
 
-## 🚀 HƯỚNG DẪN KHỞI CHẠY
+## HƯỚNG DẪN KHỞI CHẠY
 
 1. **Cài đặt môi trường**:
    ```bash
