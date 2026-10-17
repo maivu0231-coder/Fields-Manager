@@ -1,22 +1,26 @@
+import sys
+import os 
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+
 import streamlit as st
+from Core.Payment_Manager import PaymentManager
+from Component.Tab_Payment import render_tab_payment
 
-from src.Component.Tab_booking import render_tab_dat_san
+st.set_page_config(page_title="Quản lí sân bóng", layout="wide")
+st.title("⚽ Hệ thống quản lý sân bóng")
 
+pm = PaymentManager()
+tab1, tab2, tab3 = st.tabs([
+    "Tab 1: Sân bóng",
+    "Tab 2: Lịch đặt sân",
+    "Tab 3: Thanh toán"
+])
+with tab1:
+    st.info("(Thành viên khác phụ trách)")
 
-def main() -> None:
-    st.set_page_config(page_title="Quản lý sân bóng đá", layout="wide")
-    st.title("Quản lý sân bóng đá")
+with tab2:
+    st.info("(Thành viên khác phụ trách)")
 
-    tab_fields, tab_bookings, tab_payments = st.tabs(
-        ["Sân bóng", "Đặt sân / Hủy sân", "Thanh toán"]
-    )
-    with tab_fields:
-        st.info("Tab quản lý danh sách sân sẽ được tích hợp tại đây.")
-    with tab_bookings:
-        render_tab_dat_san()
-    with tab_payments:
-        st.info("Tab thanh toán sẽ được tích hợp tại đây.")
-
-
-if __name__ == "__main__":
-    main()
+with tab3:
+    render_tab_payment(pm)

@@ -1,8 +1,9 @@
 import os
 from typing import Any, List, Optional
 from datetime import datetime
-from src.Models import Field, Booking, Payment
-from src.Storage.json_handler import JSONHandler
+from Models import Field, Booking, Payment
+from .json_handler import JSONHandler
+from Core.algorithms import binary_search, merge_sort
 #default data directory relative to the project root
 DEFAULT_DATA_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "..", "Data")
@@ -16,6 +17,8 @@ class BaseRepository:
         self.handler = JSONHandler(file_path)
         self.id_field_name = id_field_name
         self.model_cls = model_cls
+        self._sorted_cache = None
+        self._sorted_keys = None
 
     def get_all(self) -> List[Any]:
         raw_items = self.handler.read_all()
@@ -82,7 +85,24 @@ class BookingRepository(BaseRepository):
         #get all bookings that are pending payment
         all_bookings = self.get_all()
         return [b for b in all_bookings if b.status == "Chờ thanh toán"]
-
+    
+    def find_by_name(self, name: str):
+        if not name:
+            return None
+        if self._sorted_cache is None:
+            all_bookings = self.get_all()
+            self._sorted_cache = merge_sort(
+                all_bookings,
+                key=lambda b: b.customer_name.lower()
+            )
+            self._sorted_keys = [
+                b.customer_name.lower() for b in self._sorted_cache
+            ]
+        target = name.strip().lower()
+        idx = binary_search(self._sorted_keys, target)
+        if idx != -1:
+            return self._sorted_cache[idx]
+        return None
 
 class PaymentRepository(BaseRepository):
     def __init__(self):
