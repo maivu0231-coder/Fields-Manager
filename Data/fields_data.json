@@ -1,0 +1,42 @@
+[
+    {
+        "id": 1,
+        "field_code": "S01",
+        "field_name": "Sân 5A (Cỏ nhân tạo)",
+        "field_type": "Sân 5",
+        "price_per_hour": 200000,
+        "status": "Còn trống",
+        "created_at": "2026-10-16 13:20:39",
+        "updated_at": "2026-10-16 13:20:39"
+    },
+    {
+        "id": 2,
+        "field_code": "S02",
+        "field_name": "Sân 5B (Cỏ nhân tạo)",
+        "field_type": "Sân 5",
+        "price_per_hour": 200000,
+        "status": "Đang có khách",
+        "created_at": "2026-10-16 13:20:39",
+        "updated_at": "2026-10-16 13:20:39"
+    },
+    {
+        "id": 3,
+        "field_code": "S03",
+        "field_name": "Sân 7A (Sân VIP Đèn Led)",
+        "field_type": "Sân 7",
+        "price_per_hour": 350000,
+        "status": "Còn trống",
+        "created_at": "2026-10-16 13:20:39",
+        "updated_at": "2026-10-16 13:20:39"
+    },
+    {
+        "id": 4,
+        "field_code": "S04",
+        "field_name": "Sân 7B (Cỏ tự nhiên)",
+        "field_type": "Sân 7",
+        "price_per_hour": 350000,
+        "status": "Bảo trì",
+        "created_at": "2026-10-16 13:20:39",
+        "updated_at": "2026-10-16 13:20:39"
+    }
+]

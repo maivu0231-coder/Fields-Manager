@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from.Base import Base
+from .Base import Base
 
 @dataclass
 class Booking(Base):
