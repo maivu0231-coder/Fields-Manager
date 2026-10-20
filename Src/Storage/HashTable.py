@@ -18,12 +18,10 @@ class CustomHashTable:
         self.buckets: List[List[HashNode]] = [[] for _ in range(self.capacity)]
 
     def _hash(self, key: str) -> int:
-        key_str = str(key)
         hash_val = 0
-        prime = 31
-        for char in key_str:
-            hash_val = (hash_val * prime + ord(char)) % self.capacity
-        return hash_val
+        for char in str(key):
+            hash_val = hash_val * 31 + ord(char)
+        return hash_val % self.capacity
 
     def _rehash(self) -> None:
         old_buckets = self.buckets

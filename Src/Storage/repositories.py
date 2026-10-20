@@ -12,11 +12,7 @@ DEFAULT_DATA_DIR = os.path.abspath(
 
 
 class BaseRepository:
-    """
-    Repository cơ sở sử dụng Bảng băm tự cài đặt (CustomHashTable)
-    để quản lý và truy xuất thực thể theo ID với độ phức tạp O(1).
-    """
-
+  
     def __init__(self, file_name: str, id_field_name: str, model_cls):
         file_path = os.path.join(DEFAULT_DATA_DIR, file_name)
         self.handler = JSONHandler(file_path)
@@ -26,16 +22,15 @@ class BaseRepository:
         self._load_into_hash_table()
 
     def _load_into_hash_table(self) -> None:
-        """Đọc dữ liệu từ file JSON và nạp vào Bảng băm tự cài đặt."""
+
         self.hash_table = CustomHashTable()
         raw_items = self.handler.read_all()
         for item in raw_items:
             entity = self.model_cls.from_dict(item)
             entity_id = str(getattr(entity, self.id_field_name))
             self.hash_table.put(entity_id, entity)
-
+    #a function to sync the hash table to the file
     def _sync_to_file(self) -> bool:
-        """Ghi toàn bộ dữ liệu từ Bảng băm xuống file JSON."""
         all_dicts = [entity.to_dict() for entity in self.hash_table.values()]
         return self.handler.write_all(all_dicts)
 
@@ -44,19 +39,16 @@ class BaseRepository:
         return self.hash_table.values()
 
     def get_by_id(self, item_id: str) -> Optional[Any]:
-        """Tra cứu O(1) trực tiếp trên CustomHashTable thay vì duyệt tuần tự O(n)."""
         self._load_into_hash_table()
         return self.hash_table.get(str(item_id))
 
     def add(self, entity: Any) -> bool:
-        """Thêm mới phần tử vào CustomHashTable O(1) và lưu xuống file."""
         self._load_into_hash_table()
         entity_id = str(getattr(entity, self.id_field_name))
         self.hash_table.put(entity_id, entity)
         return self._sync_to_file()
-
+    #a function to update an existing entity
     def update(self, entity: Any) -> bool:
-        """Cập nhật phần tử trên CustomHashTable O(1) và lưu xuống file."""
         self._load_into_hash_table()
         target_id = str(getattr(entity, self.id_field_name))
 
@@ -66,9 +58,8 @@ class BaseRepository:
         entity.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.hash_table.put(target_id, entity)
         return self._sync_to_file()
-
+    #a function to delete an existing entity
     def delete(self, item_id: str) -> bool:
-        """Xóa phần tử trên CustomHashTable O(1) và lưu xuống file."""
         self._load_into_hash_table()
         if self.hash_table.remove(str(item_id)):
             return self._sync_to_file()
