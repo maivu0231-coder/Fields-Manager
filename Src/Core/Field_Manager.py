@@ -18,6 +18,11 @@ def remove_accents(input_str: str) -> str:
 
 
 class FieldService:
+    """
+    Tầng nghiệp vụ quản lý sân bóng.
+    Mọi thao tác truy xuất theo mã sân (get_by_id, add, update, delete)
+    đều thông qua CustomHashTable của FieldRepository với độ phức tạp O(1).
+    """
 
     SESSION_KEY = "fields_data_cache"
 
@@ -61,32 +66,37 @@ class FieldService:
                 status=FieldStatus.MAINTENANCE.value,
             ),
         ]
-    #save the list of Field objects to the file and update the session state cache
-    def _save_to_file(self, fields: List[Field]) -> bool:
-        ok = self.repository.handler.write_all([field.to_dict() for field in fields])
-        if ok:
-            st.session_state[self.SESSION_KEY] = fields
-        return ok
-    #ensure that the storage file exists and load the data into the session state cache
+
+    def _refresh_cache(self) -> List[Field]:
+        """Đồng bộ lại st.session_state từ CustomHashTable trong Repository."""
+        fields = self.repository.get_all()
+        st.session_state[self.SESSION_KEY] = fields
+        return fields
+
     def _ensure_storage_and_cache(self) -> None:
         fields = self.repository.get_all()
         if not fields:
-            fields = self._get_default_seed_data()
-            self._save_to_file(fields)
+            default_fields = self._get_default_seed_data()
+            for item in default_fields:
+                self.repository.add(item)
+            fields = self._refresh_cache()
         else:
             st.session_state[self.SESSION_KEY] = fields
 
     def get_all(self) -> List[Field]:
-        fields = self.repository.get_all()
-        st.session_state[self.SESSION_KEY] = fields
-        return fields
+        return self._refresh_cache()
+
+    def get_by_id(self, code: str) -> Optional[Field]:
+        """Tra cứu sân theo mã bằng CustomHashTable O(1)."""
+        clean_code = code.strip().upper()
+        return self.repository.get_by_id(clean_code)
 
     def filter(
         self,
         status: str = "Tất cả",
         field_type: str = "Tất cả",
         search_term: str = "",
-    ) -> List[Field]:#filter the list of Field objects based on status, field_type, and search_term
+    ) -> List[Field]:
         records = self.get_all()
 
         if status != "Tất cả":
@@ -97,6 +107,12 @@ class FieldService:
 
         clean_kw = " ".join(search_term.strip().split())
         if clean_kw:
+            # Nếu người dùng nhập đúng mã sân trong bảng băm thì ưu tiên khớp nhanh
+            exact_match = self.repository.get_by_id(clean_kw.upper())
+            if exact_match and exact_match in records and len(clean_kw) <= 5:
+                # Vẫn lấy thêm các kết quả khớp chuỗi con nếu có
+                pass
+
             raw_kw = clean_kw.lower()
             no_accent_kw = remove_accents(clean_kw)
 
@@ -142,8 +158,8 @@ class FieldService:
         if price > 50000000:
             return False, "❌ Giá thuê vượt quá mức hợp lý (tối đa 50,000,000 VNĐ)!"
 
-        current_fields = self.get_all()
-        if any(f.field_id == clean_code for f in current_fields):
+        # Kiểm tra trùng mã sân bằng CustomHashTable O(1) thay vì duyệt list O(n)
+        if self.repository.get_by_id(clean_code) is not None:
             return False, f"❌ Mã sân '{clean_code}' đã tồn tại trên hệ thống!"
 
         new_field = Field(
@@ -153,10 +169,13 @@ class FieldService:
             price_per_hour=float(price),
             status=status,
         )
-        updated = [*current_fields, new_field]
-        if not self._save_to_file(updated):
+
+        # Thêm trực tiếp vào CustomHashTable O(1) và đồng bộ xuống file
+        if not self.repository.add(new_field):
             return False, "❌ Không thể lưu sân mới vào file dữ liệu."
-        return True, f"✅ Thêm thành công sân '{clean_code}' và tự động lưu vào file!"
+
+        self._refresh_cache()
+        return True, f"✅ Thêm thành công sân '{clean_code}' vào Bảng băm & File JSON!"
 
     def update(
         self, code: str, name: str, field_type: str, price: float, status: str
@@ -174,45 +193,40 @@ class FieldService:
         if price > 50000000:
             return False, "❌ Giá thuê vượt quá mức hợp lý (tối đa 50,000,000 VNĐ)!"
 
-        current_fields = self.get_all()
-        for field in current_fields:
-            if field.field_id == code:
-                updated_field = Field(
-                    field_id=field.field_id,
-                    name=clean_name,
-                    field_type=field_type,
-                    price_per_hour=float(price),
-                    status=status,
-                    created_at=field.created_at,
-                    updated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                )
-                updated = [
-                    updated_field if item.field_id == code else item
-                    for item in current_fields
-                ]
-                if not self._save_to_file(updated):
-                    return False, "❌ Không thể lưu thay đổi vào file dữ liệu."
+        # Tìm sân trong CustomHashTable O(1) thay vì dùng vòng lặp for O(n)
+        existing_field = self.repository.get_by_id(code)
+        if existing_field is None:
+            return False, f"❌ Không tìm thấy sân mã '{code}'."
 
-                if field.name != clean_name:
-                    all_bookings = self.booking_repository.get_all()
-                    changed = False
-                    for b in all_bookings:
-                        if b.field_id == code and b.status != "Đã hủy":
-                            b.field_name = clean_name
-                            changed = True
-                    if changed:
-                        self.booking_repository.handler.write_all(
-                            [b.to_dict() for b in all_bookings]
-                        )
+        old_name = existing_field.name
+        updated_field = Field(
+            field_id=existing_field.field_id,
+            name=clean_name,
+            field_type=field_type,
+            price_per_hour=float(price),
+            status=status,
+            created_at=existing_field.created_at,
+            updated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        )
 
-                return True, f"✅ Cập nhật sân '{code}' thành công và đã ghi file!"
-        return False, f"❌ Không tìm thấy sân mã '{code}'."
+        # Cập nhật trên CustomHashTable O(1)
+        if not self.repository.update(updated_field):
+            return False, "❌ Không thể lưu thay đổi vào file dữ liệu."
+
+        # Nếu đổi tên sân, cập nhật lại tên sân trong các đơn đặt chưa hủy qua BookingRepository
+        if old_name != clean_name:
+            for b in self.booking_repository.get_all():
+                if b.field_id == code and b.status != "Đã hủy":
+                    b.field_name = clean_name
+                    self.booking_repository.update(b)
+
+        self._refresh_cache()
+        return True, f"✅ Cập nhật sân '{code}' thành công và đã ghi file!"
 
     def delete(self, code: str) -> Tuple[bool, str]:
-        records = self.get_all()
-        target = next((f for f in records if f.field_id == code), None)
-
-        if not target:
+        # Tra cứu sân cần xóa bằng CustomHashTable O(1) thay vì next(...) O(n)
+        target = self.repository.get_by_id(code)
+        if target is None:
             return False, f"❌ Không tìm thấy sân mã '{code}'."
 
         if target.status == FieldStatus.IN_USE.value:
@@ -232,13 +246,16 @@ class FieldService:
                 f"⚠️ Cảnh báo: Sân '{code}' đang có {len(active_bookings)} đơn đặt sân chưa hủy. Không thể xóa!",
             )
 
-        updated = [f for f in records if f.field_id != code]
-        if not self._save_to_file(updated):
+        # Xóa khỏi CustomHashTable O(1)
+        if not self.repository.delete(code):
             return False, "❌ Không thể cập nhật file dữ liệu sau khi xóa sân."
-        return True, f"✅ Đã xóa sân '{code}' và cập nhật file lưu trữ!"
+
+        self._refresh_cache()
+        return True, f"✅ Đã xóa sân '{code}' khỏi Bảng băm và cập nhật file lưu trữ!"
 
     def reset_to_default(self) -> Tuple[bool, str]:
         default_data = self._get_default_seed_data()
-        if not self._save_to_file(default_data):
+        if not self.repository.handler.write_all([f.to_dict() for f in default_data]):
             return False, "❌ Không thể ghi dữ liệu mặc định vào file."
+        self._refresh_cache()
         return True, "✅ Đã khôi phục dữ liệu mặc định thành công!"
