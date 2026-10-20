@@ -39,9 +39,7 @@ class BaseRepository:
         return self.hash_table.values()
 
     def get_by_id(self, item_id: str) -> Optional[Any]:
-        self._load_into_hash_table()
         return self.hash_table.get(str(item_id))
-
     def add(self, entity: Any) -> bool:
         self._load_into_hash_table()
         entity_id = str(getattr(entity, self.id_field_name))
